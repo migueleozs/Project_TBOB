@@ -5,27 +5,27 @@
 #define MAP_HEIGHT 9
 #define MAP_WIDTH 15
 
-// La estructura de la sala
+// Structure de la salle (Pièce)
 typedef struct {
     char grid[MAP_HEIGHT][MAP_WIDTH];
 } Room;
 
-// La estructura del jugador
+// Structure du joueur
 typedef struct {
     int x, y;
 } Player;
 
-// 1. Dibujar la sala en la terminal
-void afficher_salle(Room *s, Player *p) {
-    // Limpiar la pantalla (esto funciona en Windows)
+// 1. Affichage de la salle dans le terminal
+void afficher_salle(Room *salle, Player *player) {
+    // Nettoyage d'écran (sur Windows)
     system("cls"); 
 
     for (int i = 0; i < MAP_HEIGHT; i++) {
         for (int j = 0; j < MAP_WIDTH; j++) {
-            if (i == p->y && j == p->x) {
-                printf("B "); // 'B' de Briatte
+            if (i == player->y && j == player->x) {
+                printf("B "); // 'B' pour Briatte
             } else {
-                printf("%c ", s->grid[i][j]);
+                printf("%c ", salle->grid[i][j]);
             }
         }
         printf("\n");
@@ -34,7 +34,7 @@ void afficher_salle(Room *s, Player *p) {
 }
 
 int main() {
-    // 2. Crear una sala de prueba
+    // 2. Création d'une salle de test
     Room salle = {
         {
             {'W','W','W','W','W','W','W','W','W','W','W','W','W','W','W'},
@@ -46,16 +46,16 @@ int main() {
         }
     };
 
-    Player briatte = {7, 3}; // Posición inicial
+    Player briatte = {7, 3}; // Position initiale
     char commande;
     bool running = true;
 
-    // 3. Bucle del juego
+    // 3. Boucle principale du jeu
     while (running == true) {
         afficher_salle(&salle, &briatte);
 
         printf("Action : ");
-        scanf(" %c", &commande); // El espacio antes de %c es vital
+        scanf(" %c", &commande); // L'espace avant %c est vital pour ignorer le 'entrée' précédent
 
         int nextX = briatte.x;
         int nextY = briatte.y;
@@ -66,7 +66,7 @@ int main() {
         if (commande == 'd') nextX++;
         if (commande == 'x') running = false;
 
-        // 4. Colisión simple
+        // 4. Gestion simple des collisions (Murs 'W' et Rochers 'R')
         if (salle.grid[nextY][nextX] != 'W' && salle.grid[nextY][nextX] != 'R') {
             briatte.x = nextX;
             briatte.y = nextY;

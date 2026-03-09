@@ -1,81 +1,77 @@
-#include <SDL.h>
-#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
-// Dimensions de la fenêtre (basées sur 15x9 cases de 64 pixels)
-#define TILE_SIZE 64
-#define MAP_WIDTH 15
 #define MAP_HEIGHT 9
+#define MAP_WIDTH 15
 
-// Structure de la Salle (Version simplifiée pour commencer)
+// La estructura de la sala
 typedef struct {
     char grid[MAP_HEIGHT][MAP_WIDTH];
 } Room;
 
-// Une salle de test écrite "en dur" (Hardcoded)
-Room room_test = {
-    {
-        {'W','W','W','W','W','W','W','W','W','W','W','W','W','W','W'},
-        {'W',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','W'},
-        {'W',' ','R',' ',' ',' ',' ',' ',' ',' ',' ','R',' ',' ','W'},
-        {'W',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','W'},
-        {'W',' ',' ',' ',' ','G','G','G',' ',' ',' ',' ',' ',' ','W'},
-        {'W',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','W'},
-        {'W',' ','R',' ',' ',' ',' ',' ',' ',' ',' ','R',' ',' ','W'},
-        {'W',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','W'},
-        {'W','W','W','W','W','W','W','W','W','W','W','W','W','W','W'}
-    }
-};
+// La estructura del jugador
+typedef struct {
+    int x, y;
+} Player;
 
-int main(int argc, char* argv[]) {
-    // 1. Initialisation de SDL
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) return 1;
+// 1. Dibujar la sala en la terminal
+void afficher_salle(Room *s, Player *p) {
+    // Limpiar la pantalla (esto funciona en Windows)
+    system("cls"); 
 
-    SDL_Window* window = SDL_CreateWindow("The Binding of Briatte - Dev Mode", 
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
-        MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE, 0);
-
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-
-    bool running = true;
-    SDL_Event event;
-
-    // 2. Boucle principale (Game Loop)
-    while (running) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) running = false;
-        }
-
-        // 3. Rendu (Dessiner la salle)
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Fond noir
-        SDL_RenderClear(renderer);
-
-        for (int y = 0; y < MAP_HEIGHT; y++) {
-            for (int x = 0; x < MAP_WIDTH; x++) {
-                SDL_Rect tile = { x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE };
-                
-                if (room_test.grid[y][x] == 'W') {
-                    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255); // Gris pour Murs
-                } else if (room_test.grid[y][x] == 'R') {
-                    SDL_SetRenderDrawColor(renderer, 139, 69, 19, 255);   // Marron pour Rochers
-                } else if (room_test.grid[y][x] == 'G') {
-                    SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);    // Noir foncé pour Gaps
-                } else {
-                    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Blanc cassé pour Sol
-                }
-                SDL_RenderFillRect(renderer, &tile);
-                
-                // Dessiner les bordures des cases pour y voir clair
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-                SDL_RenderDrawRect(renderer, &tile);
+    for (int i = 0; i < MAP_HEIGHT; i++) {
+        for (int j = 0; j < MAP_WIDTH; j++) {
+            if (i == p->y && j == p->x) {
+                printf("B "); // 'B' de Briatte
+            } else {
+                printf("%c ", s->grid[i][j]);
             }
         }
+        printf("\n");
+    }
+    printf("\nUtilisez Z (haut), S (bas), Q (gauche), D (droite). 'X' pour quitter.\n");
+}
 
-        SDL_RenderPresent(renderer);
+int main() {
+    // 2. Crear una sala de prueba
+    Room salle = {
+        {
+            {'W','W','W','W','W','W','W','W','W','W','W','W','W','W','W'},
+            {'W',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','W'},
+            {'W',' ','R',' ',' ',' ',' ',' ',' ',' ',' ','R',' ',' ','W'},
+            {'W',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','W'},
+            {'W',' ',' ',' ',' ','G','G','G',' ',' ',' ',' ',' ',' ','W'},
+            {'W','W','W','W','W','W','W','W','W','W','W','W','W','W','W'}
+        }
+    };
+
+    Player briatte = {7, 3}; // Posición inicial
+    char commande;
+    bool running = true;
+
+    // 3. Bucle del juego
+    while (running == true) {
+        afficher_salle(&salle, &briatte);
+
+        printf("Action : ");
+        scanf(" %c", &commande); // El espacio antes de %c es vital
+
+        int nextX = briatte.x;
+        int nextY = briatte.y;
+
+        if (commande == 'z') nextY--;
+        if (commande == 's') nextY++;
+        if (commande == 'q') nextX--;
+        if (commande == 'd') nextX++;
+        if (commande == 'x') running = false;
+
+        // 4. Colisión simple
+        if (salle.grid[nextY][nextX] != 'W' && salle.grid[nextY][nextX] != 'R') {
+            briatte.x = nextX;
+            briatte.y = nextY;
+        }
     }
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
     return 0;
 }

@@ -56,21 +56,21 @@ int main() {
 
         // Gestion des touches spéciales (Flèches directionnelles)
         // Sous Windows, les flèches envoient un code 0 ou 224 d'abord
-        if (touche == 0 || touche == 224) {
-            touche = getch(); // On lit le deuxième code pour identifier la flèche
-            if (touche == 72) nextY--; // Flèche Haut
-            if (touche == 80) nextY++; // Flèche Bas
-            if (touche == 75) nextX--; // Flèche Gauche
-            if (touche == 77) nextX++; // Flèche Droite
-        } 
+        //if (touche == 0 || touche == 224) {
+            //touche = getch(); // On lit le deuxième code pour identifier la flèche
+        //    if (touche == 72) nextY--; // Flèche Haut
+        //    if (touche == 80) nextY++; // Flèche Bas
+        //    if (touche == 75) nextX--; // Flèche Gauche
+        //    if (touche == 77) nextX++; // Flèche Droite
+        //} 
         // Gestion des touches normales (ZQSD / WASD / X)
-        else {
+        //else {
             if (touche == 'z' || touche == 'w') nextY--;
             if (touche == 's') nextY++;
             if (touche == 'q' || touche == 'a') nextX--;
             if (touche == 'd') nextX++;
             if (touche == 'x') running = false;
-        }
+        //}
 
         // Collision : on ne bouge que si la case n'est pas un Mur ou un Rocher
         if (salle.grid[nextY][nextX] != 'W' && salle.grid[nextY][nextX] != 'R') {

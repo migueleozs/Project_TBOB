@@ -1,40 +1,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <conio.h> // Nécessaire pour getch() sur Windows
 
 #define MAP_HEIGHT 9
 #define MAP_WIDTH 15
 
-// Structure de la salle (Pièce)
 typedef struct {
     char grid[MAP_HEIGHT][MAP_WIDTH];
 } Room;
 
-// Structure du joueur
 typedef struct {
     int x, y;
 } Player;
 
-// 1. Affichage de la salle dans le terminal
 void afficher_salle(Room *salle, Player *player) {
-    // Nettoyage d'écran (sur Windows)
     system("cls"); 
 
     for (int i = 0; i < MAP_HEIGHT; i++) {
         for (int j = 0; j < MAP_WIDTH; j++) {
             if (i == player->y && j == player->x) {
-                printf("B "); // 'B' pour Briatte
+                printf("B "); 
             } else {
                 printf("%c ", salle->grid[i][j]);
             }
         }
         printf("\n");
     }
-    printf("\nUtilisez Z (haut), S (bas), Q (gauche), D (droite). 'X' pour quitter.\n");
+    printf("\nControles : Fleches ou ZQSD. 'X' pour quitter.\n");
 }
 
 int main() {
-    // 2. Création d'une salle de test
     Room salle = {
         {
             {'W','W','W','W','W','W','W','W','W','W','W','W','W','W','W'},
@@ -46,27 +42,37 @@ int main() {
         }
     };
 
-    Player briatte = {7, 3}; // Position initiale
-    char commande;
+    Player briatte = {7, 3};
     bool running = true;
 
-    // 3. Boucle principale du jeu
-    while (running == true) {
+    while (running) {
         afficher_salle(&salle, &briatte);
 
-        printf("Action : ");
-        scanf(" %c", &commande); // L'espace avant %c est vital pour ignorer le 'entrée' précédent
+        // Lecture instantanée de la touche sans attendre 'Entrée'
+        int touche = getch(); 
 
         int nextX = briatte.x;
         int nextY = briatte.y;
 
-        if (commande == 'z') nextY--;
-        if (commande == 's') nextY++;
-        if (commande == 'q') nextX--;
-        if (commande == 'd') nextX++;
-        if (commande == 'x') running = false;
+        // Gestion des touches spéciales (Flèches directionnelles)
+        // Sous Windows, les flèches envoient un code 0 ou 224 d'abord
+        if (touche == 0 || touche == 224) {
+            touche = getch(); // On lit le deuxième code pour identifier la flèche
+            if (touche == 72) nextY--; // Flèche Haut
+            if (touche == 80) nextY++; // Flèche Bas
+            if (touche == 75) nextX--; // Flèche Gauche
+            if (touche == 77) nextX++; // Flèche Droite
+        } 
+        // Gestion des touches normales (ZQSD / WASD / X)
+        else {
+            if (touche == 'z' || touche == 'w') nextY--;
+            if (touche == 's') nextY++;
+            if (touche == 'q' || touche == 'a') nextX--;
+            if (touche == 'd') nextX++;
+            if (touche == 'x') running = false;
+        }
 
-        // 4. Gestion simple des collisions (Murs 'W' et Rochers 'R')
+        // Collision : on ne bouge que si la case n'est pas un Mur ou un Rocher
         if (salle.grid[nextY][nextX] != 'W' && salle.grid[nextY][nextX] != 'R') {
             briatte.x = nextX;
             briatte.y = nextY;

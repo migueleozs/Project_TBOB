@@ -60,7 +60,7 @@ static void run_item_menu(void)
     bool running = true;
     while (running) {
         printf("\n=== CRUD d'objets (items) ===\n");
-        printf("1) Créer item\n");
+        printf("1) Creer item\n");
         printf("2) Lister les items\n");
         printf("3) Modifier item\n");
         printf("4) Supprimer item\n");
@@ -79,16 +79,16 @@ static void run_item_menu(void)
                 Item newItem = {0};
                 prompt_item(&newItem);
                 if (append_item_to_file(ITEMS_FILE_NAME, &newItem))
-                    printf("Item ajouté\n");
+                    printf("Item ajoute\n");
                 else
-                    printf("Erreur à l\'écriture\n");
+                    printf("Erreur a l\'ecriture\n");
             } break;
             case 2:
                 print_all_items(ITEMS_FILE_NAME);
                 break;
             case 3: {
                 print_all_items(ITEMS_FILE_NAME);
-                printf("Index de l\'item à modifier: ");
+                printf("Index de l\'item a modifier: ");
                 size_t idx;
                 if (scanf("%zu", &idx) != 1) {
                     clear_stdin();
@@ -100,11 +100,11 @@ static void run_item_menu(void)
                 if (update_item_in_file(ITEMS_FILE_NAME, idx, &updated))
                     printf("Item mis à jour\n");
                 else
-                    printf("Erreur : indice invalide ou mise à jour impossible\n");
+                    printf("Erreur : indice invalide ou mise a jour impossible\n");
             } break;
             case 4: {
                 print_all_items(ITEMS_FILE_NAME);
-                printf("Index de l\'item à supprimer: ");
+                printf("Index de l\'item a supprimer: ");
                 size_t idx;
                 if (scanf("%zu", &idx) != 1) {
                     clear_stdin();
@@ -112,7 +112,7 @@ static void run_item_menu(void)
                 }
                 clear_stdin();
                 if (delete_item_in_file(ITEMS_FILE_NAME, idx))
-                    printf("Item supprimé\n");
+                    printf("Item supprime\n");
                 else
                     printf("Erreur : indice invalide ou suppression impossible\n");
             } break;

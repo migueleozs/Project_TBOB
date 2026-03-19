@@ -1,10 +1,130 @@
 #include "salle.h"
 #include "structs.h"
+#include "items.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <conio.h> // Nécessaire pour getch() sur Windows
 
+static void clear_stdin(void)
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF)
+        ;
+}
+
+static void trim_newline(char *s)
+{
+    if (!s) return;
+    size_t len = strlen(s);
+    if (len == 0) return;
+    if (s[len - 1] == '\n')
+        s[len - 1] = '\0';
+}
+
+static void prompt_item(Item *item)
+{
+    if (!item)
+        return;
+
+    printf("Nom (peut contenir des espaces) : ");
+    if (fgets(item->name, sizeof(item->name), stdin)) {
+        trim_newline(item->name);
+    }
+
+    printf("hpMax (float) : ");
+    scanf("%f", &item->hpMax);
+
+    printf("shield (int) : ");
+    scanf("%d", &item->shield);
+
+    printf("dmg (float) : ");
+    scanf("%f", &item->dmg);
+
+    printf("ps (0/1) : ");
+    scanf("%d", (int *)&item->ps);
+
+    printf("ss (0/1) : ");
+    scanf("%d", (int *)&item->ss);
+
+    printf("flight (0/1) : ");
+    scanf("%d", (int *)&item->flight);
+
+    clear_stdin();
+}
+
+static void run_item_menu(void)
+{
+    bool running = true;
+    while (running) {
+        printf("\n=== CRUD d'objets (items) ===\n");
+        printf("1) Creer item\n");
+        printf("2) Lister les items\n");
+        printf("3) Modifier item\n");
+        printf("4) Supprimer item\n");
+        printf("0) Retour\n");
+        printf("Choix : ");
+
+        int choix = -1;
+        if (scanf("%d", &choix) != 1) {
+            clear_stdin();
+            continue;
+        }
+        clear_stdin();
+
+        switch (choix) {
+            case 1: {
+                Item newItem = {0};
+                prompt_item(&newItem);
+                if (append_item_to_file(ITEMS_FILE_NAME, &newItem))
+                    printf("Item ajoute\n");
+                else
+                    printf("Erreur a l\'ecriture\n");
+            } break;
+            case 2:
+                print_all_items(ITEMS_FILE_NAME);
+                break;
+            case 3: {
+                print_all_items(ITEMS_FILE_NAME);
+                printf("Index de l\'item a modifier: ");
+                size_t idx;
+                if (scanf("%zu", &idx) != 1) {
+                    clear_stdin();
+                    break;
+                }
+                clear_stdin();
+                Item updated = {0};
+                prompt_item(&updated);
+                if (update_item_in_file(ITEMS_FILE_NAME, idx, &updated))
+                    printf("Item mis à jour\n");
+                else
+                    printf("Erreur : indice invalide ou mise a jour impossible\n");
+            } break;
+            case 4: {
+                print_all_items(ITEMS_FILE_NAME);
+                printf("Index de l\'item a supprimer: ");
+                size_t idx;
+                if (scanf("%zu", &idx) != 1) {
+                    clear_stdin();
+                    break;
+                }
+                clear_stdin();
+                if (delete_item_in_file(ITEMS_FILE_NAME, idx))
+                    printf("Item supprime\n");
+                else
+                    printf("Erreur : indice invalide ou suppression impossible\n");
+            } break;
+            case 0:
+                running = false;
+                break;
+            default:
+                printf("Choix invalide.\n");
+                break;
+        }
+    }
+}
 
 int main(int argc, char const *argv[])
 {
@@ -15,7 +135,7 @@ int main(int argc, char const *argv[])
     Room tab_Room[14];
 
     //Title
-    printf("CRUD des pieces du donjon\n\n");
+    printf("CRUD des salles du donjon\n\n");
 
 
     //Prédéfinition des salles
@@ -34,9 +154,9 @@ int main(int argc, char const *argv[])
 
         //Choix de la taille par l'user
     
-    printf("Entrer n: ");
+    printf("Entrez n (hauteur) : ");
     scanf("%d", &n);
-    printf("Entrer m: ");
+    printf("Entrez m (largeur) : ");
     scanf("%d", &m);
     printf("\n");
 
@@ -66,7 +186,7 @@ int main(int argc, char const *argv[])
 
         
         
-        int nextX , nextY; 
+        //int nextX , nextY; 
         // int X = tab_Room[0].width/2;
         // int Y = tab_Room[0].height/2;
 
@@ -81,7 +201,6 @@ int main(int argc, char const *argv[])
         
         printf("\n");
         printf("\n");
-        printf("Deplacements [Gauche (a/q); Droite (d); Haut (s); Bas (z/w)] : ");
         //scanf(" %c", &touche); 
         int touche = getch();
 
@@ -145,6 +264,8 @@ int main(int argc, char const *argv[])
     //     printf("Tapez c(Create); r(read), u(update) ou d(delete) : ");
     //     scanf(" %c", &choix);
     // }while(choix != 'c' &&  choix != 'r' && choix != 'u' && choix != 'd');
+
+    /*
     //Exécution selon le choix de l'user
     switch(choix){
         case 'c' :
@@ -165,5 +286,8 @@ int main(int argc, char const *argv[])
 
     }
 
+    */
+
+    run_item_menu();
     return 0;
 }

@@ -94,7 +94,8 @@ void show(Room *R){
         }
         printf("\n");
     }
-    freeR(R);
+    
+    //freeR(R);
 }
 
 void freeR(Room *R){

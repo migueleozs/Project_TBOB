@@ -41,7 +41,7 @@ int main(int argc, char const *argv[])
     printf("\n");
 
     for(i = 0; i < 14; i++)
-        set_RoomId(&tab_Room[i], i+1); //Affectation des id
+        set_RoomId(&tab_Room[i], i+1); // Affectation des id
     
 
             //Salles modifiables par l'user

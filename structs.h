@@ -22,6 +22,17 @@ typedef struct {
     bool flight;   // Vol (Passer par-dessus les trous/gaps)
 } Item;
 
+// 3. Structure d'Entité : Joueur ou Monstre
+typedef struct {
+    char name[50]; // Nom de l'entité
+    float hpMax;   // Points de vie maximum
+    float dmg;     // Dégâts infligés
+    int x, y;      // Coordonnées de position dans la salle
+    bool shoot;    // Capacité à tirer des projectiles
+    bool ss;       // Tir spectral (Pass à travers les rochers)
+    bool flight;   // Vol (Passer par-dessus les trous/gaps)
+} Entity;
+
 #endif /* STRUCTS_H */
 
 //

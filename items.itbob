@@ -1,4 +1,4 @@
-{3}
+{4}
 ---
 name=<3
 hpMax=1.00
@@ -8,3 +8,11 @@ hpMax=1.00
 ---
 name=Launch
 hpMax=1.00
+---
+name=min
+hpMax=1.00
+shield=2
+dmg=2.00
+ps=1
+ss=1
+flight=1

@@ -23,6 +23,6 @@ typedef struct {
     float dmg;     // Dégâts infligés
     int x, y;      // Coordonnées de position dans la salle
     bool can_shoot; // Capacité à tirer des projectiles
-    bool is_champion; // Version "Champion" du monstre (10% de chance)
+    bool flight;   // Vol (Passer par-dessus les trous/gaps)
     // ... autres champs d'état (ex: vitesse de déplacement)
 } Entity;

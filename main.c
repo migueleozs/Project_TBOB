@@ -1,6 +1,7 @@
 #include "salle.h"
 #include "structs.h"
 #include "items.h"
+#include "monsters.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -113,6 +114,111 @@ static void run_item_menu(void)
                 clear_stdin();
                 if (delete_item_in_file(ITEMS_FILE_NAME, idx))
                     printf("Item supprime\n");
+                else
+                    printf("Erreur : indice invalide ou suppression impossible\n");
+            } break;
+            case 0:
+                running = false;
+                break;
+            default:
+                printf("Choix invalide.\n");
+                break;
+        }
+    }
+}
+
+static void prompt_entity(Entity *entity)
+{
+    if (!entity)
+        return;
+
+    printf("Nom (peut contenir des espaces) : ");
+    if (fgets(entity->name, sizeof(entity->name), stdin)) {
+        trim_newline(entity->name);
+    }
+
+    printf("Vie : ");
+    scanf("%f", &entity->hpMax);
+/*
+    printf("dmg (float) : ");
+    scanf("%f", &entity->dmg);
+
+    printf("x (int) : ");
+    scanf("%d", &entity->x);
+
+    printf("y (int) : ");
+    scanf("%d", &entity->y);
+*/
+    printf("Peut tirer? (0/1) : ");
+    scanf("%d", (int *)&entity->shoot);
+
+    printf("Tir spectral? (0/1) : ");
+    scanf("%d", (int *)&entity->ss);
+
+    printf("Peut voler? (0/1) : ");
+    scanf("%d", (int *)&entity->flight);
+
+    clear_stdin();
+}
+
+static void run_monster_menu(void)
+{
+    bool running = true;
+    while (running) {
+        printf("\n=== CRUD de monstres ===\n");
+        printf("1) Creer monstre\n");
+        printf("2) Lister les monstres\n");
+        printf("3) Modifier monstre\n");
+        printf("4) Supprimer monstre\n");
+        printf("0) Retour\n");
+        printf("Choix : ");
+
+        int choix = -1;
+        if (scanf("%d", &choix) != 1) {
+            clear_stdin();
+            continue;
+        }
+        clear_stdin();
+
+        switch (choix) {
+            case 1: {
+                Entity newEntity = {0};
+                prompt_entity(&newEntity);
+                if (append_entity_to_file(MONSTERS_FILE_NAME, &newEntity))
+                    printf("Monstre ajouté\n");
+                else
+                    printf("Erreur à l'écriture\n");
+            } break;
+            case 2:
+                print_all_entities(MONSTERS_FILE_NAME);
+                break;
+            case 3: {
+                print_all_entities(MONSTERS_FILE_NAME);
+                printf("Index du monstre à modifier : ");
+                size_t idx;
+                if (scanf("%zu", &idx) != 1) {
+                    clear_stdin();
+                    break;
+                }
+                clear_stdin();
+                Entity updated = {0};
+                prompt_entity(&updated);
+                if (update_entity_in_file(MONSTERS_FILE_NAME, idx, &updated))
+                    printf("Monstre mis à jour\n");
+                else
+                    printf("Erreur : indice invalide ou mise à jour impossible\n");
+            } break;
+            case 4: {
+                print_all_entities(MONSTERS_FILE_NAME);
+                printf("Index du monstre à supprimer : ");
+                size_t idx;
+                if (scanf("%zu", &idx) != 1) {
+                    clear_stdin();
+                    break;
+                }
+                clear_stdin();
+                if (delete_entity_in_file(MONSTERS_FILE_NAME, idx))
+                    printf("Monstre supprimé\n");
                 else
                     printf("Erreur : indice invalide ou suppression impossible\n");
             } break;
@@ -289,5 +395,6 @@ int main(int argc, char const *argv[])
     */
 
     run_item_menu();
+    run_monster_menu();
     return 0;
 }

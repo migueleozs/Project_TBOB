@@ -202,9 +202,10 @@ void free_entities(Entity *entities) {
 void print_entity(const Entity *entity, size_t index) {
     if (!entity) return;
     printf("[%zu] %s\n", index, entity->name[0] != '\0' ? entity->name : "Entity");
-    printf("    hpMax: %.2f, dmg: %.2f\n", entity->hpMax, entity->dmg);
-    printf("    x: %d, y: %d\n", entity->x, entity->y);
-    printf("    shoot: %s, ss: %s, flight: %s\n",
+    printf("    hpMax: %.2f\n", entity->hpMax);
+    //printf("    dmg: %.2f\n", entity->dmg);
+    //printf("    x: %d, y: %d\n", entity->x, entity->y);
+    printf("    shoot: %s \n    ss: %s \n    flight: %s\n",
            entity->shoot ? "yes" : "no",
            entity->ss ? "yes" : "no",
            entity->flight ? "yes" : "no");

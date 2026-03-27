@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <time.h>
 #include <conio.h> // Nécessaire pour getch() sur Windows
 
 /*
@@ -251,7 +250,7 @@ static void run_monster_menu(void)
     }
 }
 
-int old_main(int argc, char const *argv[])
+int main(int argc, char const *argv[])
 {
     
     //Variables génériques
@@ -485,175 +484,6 @@ int old_main(int argc, char const *argv[])
     }
 
     printf("\n=== TEST COMPLETE ===\n");
-
+    
     return 0;
 }
-
-int main(int argc, char const *argv[])
-{
-    printf("=== TBOB Playable Prototype ===\n\n");
-    printf("Controles: z/s/q/d o w/s/a/d, salir: x\n\n");
-
-    RoomTemplate *templates = NULL;
-    size_t template_count = 0;
-    if (!load_room_templates("rooms.rtbob", &templates, &template_count)) {
-        fprintf(stderr, "Error: no se pudo cargar rooms.rtbob\n");
-        return 1;
-    }
-
-    Room *rooms = NULL;
-    size_t room_count = 0;
-    if (!generate_floor(0, templates, template_count,
-                        "monstres.mtbob", "items.itbob",
-                        &rooms, &room_count)) {
-        fprintf(stderr, "Error: no se pudo generar la planta\n");
-        free_room_templates(templates, template_count);
-        return 1;
-    }
-
-    if (room_count < 1) {
-        fprintf(stderr, "No se generaron salas\n");
-        free_rooms(rooms, room_count);
-        free_room_templates(templates, template_count);
-        return 1;
-    }
-
-    typedef struct { int x, y; } Coord;
-    Coord pool[14] = {{0,0},{1,0},{2,0},{3,0},{0,1},{1,1},{2,1},{3,1},{0,2},{1,2},{2,2},{3,2},{0,3},{1,3}};
-    srand((unsigned int)time(NULL));
-    for (int i = 13; i > 0; --i) {
-        int r = rand() % (i + 1);
-        Coord tmp = pool[i];
-        pool[i] = pool[r];
-        pool[r] = tmp;
-    }
-
-    Coord room_position[14];
-    int layout[4][4];
-    for (int y = 0; y < 4; ++y)
-        for (int x = 0; x < 4; ++x)
-            layout[y][x] = -1;
-
-    for (int i = 0; i < 14; ++i) {
-        room_position[i] = pool[i];
-        layout[pool[i].y][pool[i].x] = i;
-    }
-
-    int adjacency[14][4]; // N E S W
-    for (int i = 0; i < 14; ++i) {
-        int x = room_position[i].x;
-        int y = room_position[i].y;
-        adjacency[i][0] = (y > 0) ? layout[y - 1][x] : -1;
-        adjacency[i][1] = (x < 3) ? layout[y][x + 1] : -1;
-        adjacency[i][2] = (y < 3) ? layout[y + 1][x] : -1;
-        adjacency[i][3] = (x > 0) ? layout[y][x - 1] : -1;
-
-        configure_room_doors(&rooms[i],
-                             adjacency[i][0] != -1,
-                             adjacency[i][1] != -1,
-                             adjacency[i][2] != -1,
-                             adjacency[i][3] != -1);
-    }
-
-    int current_room = 0;
-    int player_x = -1;
-    int player_y = -1;
-
-    for (int y = 0; y < rooms[current_room].height; ++y) {
-        for (int x = 0; x < rooms[current_room].width; ++x) {
-            if (rooms[current_room].grid[y][x] == 'P') {
-                player_x = x;
-                player_y = y;
-                break;
-            }
-        }
-        if (player_x != -1) break;
-    }
-
-    if (player_x == -1 || player_y == -1) {
-        player_x = rooms[current_room].width / 2;
-        player_y = rooms[current_room].height / 2;
-        rooms[current_room].grid[player_y][player_x] = 'P';
-    }
-
-    while (true) {
-        system("cls");
-        printf("Sala %d / %zu\n", current_room, room_count);
-        printf("z/w arriba, s abajo, q/a izquierda, d derecha, x salir\n");
-
-        show(&rooms[current_room]);
-
-        int key = getch();
-        if (key == 'x' || key == 'X')
-            break;
-
-        int dx = 0, dy = 0;
-        if (key == 'z' || key == 'w') dy = -1;
-        else if (key == 's') dy = 1;
-        else if (key == 'q' || key == 'a') dx = -1;
-        else if (key == 'd') dx = 1;
-        else continue;
-
-        int nx = player_x + dx;
-        int ny = player_y + dy;
-
-        if (nx < 0 || ny < 0 || nx >= rooms[current_room].width || ny >= rooms[current_room].height)
-            continue;
-
-        char tile = rooms[current_room].grid[ny][nx];
-        if (tile == 'W' || tile == 'R')
-            continue;
-
-        if (tile == 'D') {
-            int dir = -1;
-            if (ny == 0) dir = 0;
-            else if (nx == rooms[current_room].width - 1) dir = 1;
-            else if (ny == rooms[current_room].height - 1) dir = 2;
-            else if (nx == 0) dir = 3;
-
-            if (dir == -1) continue;
-
-            int next_room = adjacency[current_room][dir];
-            if (next_room == -1) continue;
-
-            if ((player_x == rooms[current_room].width / 2 &&
-                 (player_y == 0 || player_y == rooms[current_room].height - 1)) ||
-                (player_y == rooms[current_room].height / 2 &&
-                 (player_x == 0 || player_x == rooms[current_room].width - 1))) {
-                rooms[current_room].grid[player_y][player_x] = 'D';
-            } else {
-                rooms[current_room].grid[player_y][player_x] = ' ';
-            }
-
-            current_room = next_room;
-            if (dir == 0) {
-                player_y = rooms[current_room].height - 2;
-                player_x = rooms[current_room].width / 2;
-            } else if (dir == 1) {
-                player_x = 1;
-                player_y = rooms[current_room].height / 2;
-            } else if (dir == 2) {
-                player_y = 1;
-                player_x = rooms[current_room].width / 2;
-            } else if (dir == 3) {
-                player_x = rooms[current_room].width - 2;
-                player_y = rooms[current_room].height / 2;
-            }
-
-            rooms[current_room].grid[player_y][player_x] = 'P';
-            continue;
-        }
-
-        rooms[current_room].grid[player_y][player_x] = ' ';
-        player_x = nx;
-        player_y = ny;
-        rooms[current_room].grid[player_y][player_x] = 'P';
-    }
-
-    free_rooms(rooms, room_count);
-    free_room_templates(templates, template_count);
-
-    printf("Fin del juego\n");
-    return 0;
-}
-

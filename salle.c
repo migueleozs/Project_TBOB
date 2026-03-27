@@ -98,6 +98,17 @@ void show(Room *R){
     //freeR(R);
 }
 
+void configure_room_doors(Room *room, bool north, bool east, bool south, bool west) {
+    if (!room) return;
+    int midW = room->width / 2;
+    int midH = room->height / 2;
+
+    if (north) room->grid[0][midW] = 'D'; else room->grid[0][midW] = 'W';
+    if (south) room->grid[room->height - 1][midW] = 'D'; else room->grid[room->height - 1][midW] = 'W';
+    if (west)  room->grid[midH][0] = 'D';         else room->grid[midH][0] = 'W';
+    if (east)  room->grid[midH][room->width - 1] = 'D'; else room->grid[midH][room->width - 1] = 'W';
+}
+
 void freeR(Room *R) {
     if (!R) return;
     if (R->grid) {

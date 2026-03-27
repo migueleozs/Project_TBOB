@@ -1,0 +1,58 @@
+# Makefile for TBOB Floor Generation System
+
+CC = gcc
+CFLAGS = -Wall -Wextra -std=c99 -O2
+LDFLAGS =
+
+# Source files
+SRCS = rooms.c salle.c items.c monsters.c
+OBJS = $(SRCS:.c=.o)
+
+# Targets
+TEST_SRCS = test_floor.c
+TEST_OBJS = test_floor.o
+TEST_TARGET = test_floor
+
+EXAMPLE_SRCS = FLOOR_GENERATION_EXAMPLES.c
+EXAMPLE_OBJS = FLOOR_GENERATION_EXAMPLES.o
+EXAMPLE_TARGET = floor_examples
+
+.PHONY: all clean test examples help
+
+# Default target
+all: $(TEST_TARGET)
+
+# Rules
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(TEST_TARGET): $(TEST_OBJS) $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(EXAMPLE_TARGET): $(EXAMPLE_OBJS) $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+# Test targets
+test: $(TEST_TARGET)
+	./$(TEST_TARGET)
+
+examples: $(EXAMPLE_TARGET)
+	./$(EXAMPLE_TARGET)
+
+clean:
+	rm -f $(OBJS) $(TEST_OBJS) $(EXAMPLE_OBJS)
+	rm -f $(TEST_TARGET) $(EXAMPLE_TARGET)
+
+help:
+	@echo "Available targets:"
+	@echo "  all       - Build the test program (default)"
+	@echo "  test      - Build and run the test program"
+	@echo "  examples  - Build and run the examples program"
+	@echo "  clean     - Remove compiled files"
+	@echo "  help      - Show this help message"
+
+# Phony targets for documentation
+.PHONY: docs
+docs:
+	@echo "Floor Generation System v1.0"
+	@echo "For detailed documentation, see FLOOR_GENERATION.md"

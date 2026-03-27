@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 // 1. Structure de la Salle (Personne A)
 typedef struct {
     int id;

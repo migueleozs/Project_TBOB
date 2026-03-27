@@ -7,7 +7,21 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <conio.h> // Nécessaire pour getch() sur Windows
+//#include <conio.h> // Nécessaire pour getch() sur Windows
+#include <termios.h> // Remplace conio.h pour Mac/Linux
+#include <unistd.h> // Fonction read() pour getch() sur Mac/Linux
+
+int getch_mac() {
+    struct termios oldt, newt;
+    int ch;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return ch;
+}
 
 static void clear_stdin(void)
 {
@@ -308,7 +322,7 @@ int main(int argc, char const *argv[])
         printf("\n");
         printf("\n");
         //scanf(" %c", &touche); 
-        int touche = getch();
+        int touche = getch_mac();
 
             if (touche == 'z' || touche == 'w') 
                 nextY--;

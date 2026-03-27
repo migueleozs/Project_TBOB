@@ -98,9 +98,66 @@ void show(Room *R){
     //freeR(R);
 }
 
-void freeR(Room *R){
-    int i;
-    for(i=0; i < R->height; i++)
-        free(R->grid[i]);
-    free(R->grid);
+void freeR(Room *R) {
+    if (!R) return;
+    if (R->grid) {
+        for (int i = 0; i < R->height; ++i) {
+            free(R->grid[i]);
+        }
+        free(R->grid);
+    }
+}
+
+// ==================== Floor Generation ====================
+
+bool generate_and_display_floor(int floor_num,
+                               const char *rooms_template_file,
+                               const char *monsters_file,
+                               const char *items_file) {
+    if (!rooms_template_file || !monsters_file || !items_file)
+        return false;
+
+    // Load room templates
+    RoomTemplate *templates = NULL;
+    size_t template_count = 0;
+
+    if (!load_room_templates(rooms_template_file, &templates, &template_count)) {
+        fprintf(stderr, "Error loading room templates from %s\n", rooms_template_file);
+        return false;
+    }
+
+    // Generate the floor
+    Room *rooms = NULL;
+    size_t room_count = 0;
+
+    if (!generate_floor(floor_num, templates, template_count,
+                       monsters_file, items_file,
+                       &rooms, &room_count)) {
+        fprintf(stderr, "Error generating floor %d\n", floor_num);
+        free_room_templates(templates, template_count);
+        return false;
+    }
+
+    // Display generated rooms
+    printf("\n========== FLOOR %d ==========\n\n", floor_num);
+    printf("Total rooms generated: %zu\n\n", room_count);
+
+    for (size_t i = 0; i < room_count; ++i) {
+        const char *room_type = "Normal";
+        if (i == 0) room_type = "SPAWNER";
+        else if (i == 11) room_type = "ITEM ROOM";
+        else if (i == 12) room_type = "BOSS ROOM";
+        else if (i == 13) room_type = "BONUS ITEM ROOM";
+
+        printf("\n--- Room #%zu (%s) - ID: %d ---\n", i, room_type, rooms[i].id);
+        show(&rooms[i]);
+    }
+
+    printf("\n========== FLOOR %d COMPLETE ==========\n", floor_num);
+
+    // Cleanup
+    free_rooms(rooms, room_count);
+    free_room_templates(templates, template_count);
+
+    return true;
 }

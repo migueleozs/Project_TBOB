@@ -2,6 +2,7 @@
 
 #define STRUCTS_H
 
+#include <stdbool.h>
 
 //Structure des salles
 typedef struct{

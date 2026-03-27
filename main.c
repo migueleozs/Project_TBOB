@@ -489,51 +489,70 @@ int old_main(int argc, char const *argv[])
     return 0;
 }
 
+static void afficher_minimap(int layout[4][4], int current_room)
+{
+    printf("\nMinicarte (grille 4x4) :\n\n");
+    for (int y = 0; y < 4; ++y) {
+        printf("\n");
+        for (int x = 0; x < 4; ++x) {
+            if (layout[y][x] == -1) {
+                printf(" . ");
+            } else if (layout[y][x] == current_room) {
+                printf(" P ");
+            } else {
+                printf(" * ");
+            }
+        }
+        printf("\n");
+    }
+}
+
 int main(int argc, char const *argv[])
 {
     printf("=== TBOB Playable Prototype ===\n\n");
-    printf("Controles: z/s/q/d o w/s/a/d, salir: x\n\n");
+    printf("Contrôles : z/s/q/d ou w/s/a/d, x pour quitter.\n\n");
 
-    RoomTemplate *templates = NULL;
-    size_t template_count = 0;
-    if (!load_room_templates("rooms.rtbob", &templates, &template_count)) {
-        fprintf(stderr, "Error: no se pudo cargar rooms.rtbob\n");
-        return 1;
+    int height = 0, width = 0;
+    do {
+        printf("Entrez la hauteur des salles (9-20) : ");
+        if (scanf("%d", &height) != 1) { clear_stdin(); height = 0; continue; }
+        clear_stdin();
+    } while (height < 9 || height > 20);
+
+    do {
+        printf("Entrez la largeur des salles (9-20) : ");
+        if (scanf("%d", &width) != 1) { clear_stdin(); width = 0; continue; }
+        clear_stdin();
+    } while (width < 9 || width > 20);
+
+    // Création des 14 salles en mémoire avec les dimensions partagées
+    Room rooms[14];
+    create_spawner_room_custom(&rooms[0], 0, height, width);
+    for (int i = 1; i <= 10; ++i) {
+        create_normal_room_custom(&rooms[i], i, height, width);
     }
+    create_item_room_custom(&rooms[11], 11, height, width, 'I');
+    create_boss_room_custom(&rooms[12], 12, height, width);
+    create_item_room_custom(&rooms[13], 13, height, width, 'H');
 
-    Room *rooms = NULL;
-    size_t room_count = 0;
-    if (!generate_floor(0, templates, template_count,
-                        "monstres.mtbob", "items.itbob",
-                        &rooms, &room_count)) {
-        fprintf(stderr, "Error: no se pudo generar la planta\n");
-        free_room_templates(templates, template_count);
-        return 1;
-    }
-
-    if (room_count < 1) {
-        fprintf(stderr, "No se generaron salas\n");
-        free_rooms(rooms, room_count);
-        free_room_templates(templates, template_count);
-        return 1;
-    }
-
+    // Positionnement aléatoire contigu sur grille 4x4
     typedef struct { int x, y; } Coord;
     Coord pool[14] = {{0,0},{1,0},{2,0},{3,0},{0,1},{1,1},{2,1},{3,1},{0,2},{1,2},{2,2},{3,2},{0,3},{1,3}};
+
     srand((unsigned int)time(NULL));
     for (int i = 13; i > 0; --i) {
-        int r = rand() % (i + 1);
+        int j = rand() % (i + 1);
         Coord tmp = pool[i];
-        pool[i] = pool[r];
-        pool[r] = tmp;
+        pool[i] = pool[j];
+        pool[j] = tmp;
     }
 
-    Coord room_position[14];
     int layout[4][4];
     for (int y = 0; y < 4; ++y)
         for (int x = 0; x < 4; ++x)
             layout[y][x] = -1;
 
+    Coord room_position[14];
     for (int i = 0; i < 14; ++i) {
         room_position[i] = pool[i];
         layout[pool[i].y][pool[i].x] = i;
@@ -543,11 +562,10 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < 14; ++i) {
         int x = room_position[i].x;
         int y = room_position[i].y;
-        adjacency[i][0] = (y > 0) ? layout[y - 1][x] : -1;
-        adjacency[i][1] = (x < 3) ? layout[y][x + 1] : -1;
-        adjacency[i][2] = (y < 3) ? layout[y + 1][x] : -1;
-        adjacency[i][3] = (x > 0) ? layout[y][x - 1] : -1;
-
+        adjacency[i][0] = (y > 0 && layout[y-1][x] != -1) ? layout[y-1][x] : -1;
+        adjacency[i][1] = (x < 3 && layout[y][x+1] != -1) ? layout[y][x+1] : -1;
+        adjacency[i][2] = (y < 3 && layout[y+1][x] != -1) ? layout[y+1][x] : -1;
+        adjacency[i][3] = (x > 0 && layout[y][x-1] != -1) ? layout[y][x-1] : -1;
         configure_room_doors(&rooms[i],
                              adjacency[i][0] != -1,
                              adjacency[i][1] != -1,
@@ -556,36 +574,36 @@ int main(int argc, char const *argv[])
     }
 
     int current_room = 0;
-    int player_x = -1;
-    int player_y = -1;
+    int player_x = width / 2;
+    int player_y = height / 2;
+    // joueur deja place dans spawn
 
-    for (int y = 0; y < rooms[current_room].height; ++y) {
-        for (int x = 0; x < rooms[current_room].width; ++x) {
-            if (rooms[current_room].grid[y][x] == 'P') {
-                player_x = x;
-                player_y = y;
-                break;
-            }
-        }
-        if (player_x != -1) break;
-    }
-
-    if (player_x == -1 || player_y == -1) {
-        player_x = rooms[current_room].width / 2;
-        player_y = rooms[current_room].height / 2;
-        rooms[current_room].grid[player_y][player_x] = 'P';
-    }
-
-    while (true) {
+    bool playing = true;
+    while (playing) {
         system("cls");
-        printf("Sala %d / %zu\n", current_room, room_count);
-        printf("z/w arriba, s abajo, q/a izquierda, d derecha, x salir\n");
+        printf("Salle actuelle : %d / 13\n", current_room);
 
-        show(&rooms[current_room]);
+        // Affiche la salle actuelle avec la minicarte a cote
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                printf("%c ", rooms[current_room].grid[y][x]);
+            }
+            if (y == 0) printf("   4x4 Minicarte:");
+            if (y < 4) {
+                int yy = y;
+                printf("   ");
+                for (int xx = 0; xx < 4; ++xx) {
+                    if (layout[yy][xx] == -1) printf(" . ");
+                    else if (layout[yy][xx] == current_room) printf(" P ");
+                    else printf(" * ");
+                }
+            }
+            printf("\n");
+        }
 
+        printf("\nMouvement : z/w/up, s/down, q/a/gauche, d/droite, x/quitter\n");
         int key = getch();
-        if (key == 'x' || key == 'X')
-            break;
+        if (key == 'x' || key == 'X') break;
 
         int dx = 0, dy = 0;
         if (key == 'z' || key == 'w') dy = -1;
@@ -596,49 +614,27 @@ int main(int argc, char const *argv[])
 
         int nx = player_x + dx;
         int ny = player_y + dy;
+        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
 
-        if (nx < 0 || ny < 0 || nx >= rooms[current_room].width || ny >= rooms[current_room].height)
-            continue;
+        char cible = rooms[current_room].grid[ny][nx];
+        if (cible == 'W' || cible == 'R') continue;
 
-        char tile = rooms[current_room].grid[ny][nx];
-        if (tile == 'W' || tile == 'R')
-            continue;
-
-        if (tile == 'D') {
+        if (cible == 'D') {
             int dir = -1;
             if (ny == 0) dir = 0;
-            else if (nx == rooms[current_room].width - 1) dir = 1;
-            else if (ny == rooms[current_room].height - 1) dir = 2;
+            else if (nx == width - 1) dir = 1;
+            else if (ny == height - 1) dir = 2;
             else if (nx == 0) dir = 3;
-
             if (dir == -1) continue;
-
             int next_room = adjacency[current_room][dir];
             if (next_room == -1) continue;
 
-            if ((player_x == rooms[current_room].width / 2 &&
-                 (player_y == 0 || player_y == rooms[current_room].height - 1)) ||
-                (player_y == rooms[current_room].height / 2 &&
-                 (player_x == 0 || player_x == rooms[current_room].width - 1))) {
-                rooms[current_room].grid[player_y][player_x] = 'D';
-            } else {
-                rooms[current_room].grid[player_y][player_x] = ' ';
-            }
-
+            rooms[current_room].grid[player_y][player_x] = 'D';
             current_room = next_room;
-            if (dir == 0) {
-                player_y = rooms[current_room].height - 2;
-                player_x = rooms[current_room].width / 2;
-            } else if (dir == 1) {
-                player_x = 1;
-                player_y = rooms[current_room].height / 2;
-            } else if (dir == 2) {
-                player_y = 1;
-                player_x = rooms[current_room].width / 2;
-            } else if (dir == 3) {
-                player_x = rooms[current_room].width - 2;
-                player_y = rooms[current_room].height / 2;
-            }
+            if (dir == 0) { player_y = height - 2; player_x = width/2; }
+            else if (dir == 1) { player_y = height/2; player_x = 1; }
+            else if (dir == 2) { player_y = 1; player_x = width/2; }
+            else if (dir == 3) { player_y = height/2; player_x = width-2; }
 
             rooms[current_room].grid[player_y][player_x] = 'P';
             continue;
@@ -650,10 +646,8 @@ int main(int argc, char const *argv[])
         rooms[current_room].grid[player_y][player_x] = 'P';
     }
 
-    free_rooms(rooms, room_count);
-    free_room_templates(templates, template_count);
+    for (int i = 0; i < 14; ++i) freeR(&rooms[i]);
 
-    printf("Fin del juego\n");
+    printf("Fin du jeu.\n");
     return 0;
 }
-

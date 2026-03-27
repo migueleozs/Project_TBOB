@@ -213,6 +213,28 @@ static void create_spawner_room(Room *room, int id) {
     room->grid[4][7] = 'P'; // P for Player start position
 }
 
+// Fonction personnalisée (nmx + largeur variables)
+void create_spawner_room_custom(Room *room, int id, int height, int width) {
+    initialize_room(room, id, height, width);
+    room->grid[height / 2][width / 2] = 'P';
+}
+
+void create_normal_room_custom(Room *room, int id, int height, int width) {
+    initialize_room(room, id, height, width);
+}
+
+void create_item_room_custom(Room *room, int id, int height, int width, char item_code) {
+    initialize_room(room, id, height, width);
+    room->grid[height / 2][width / 2] = item_code;
+}
+
+void create_boss_room_custom(Room *room, int id, int height, int width) {
+    initialize_room(room, id, height, width);
+    // boss avec porte en haut (par défaut) et centre vide
+    room->grid[0][width / 2] = 'D';
+    room->grid[height / 2][width / 2] = 'B';
+}
+
 /// Create a boss room (only entrance door, empty otherwise)
 static void create_boss_room(Room *room, int id) {
     room->id = id;

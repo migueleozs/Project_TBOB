@@ -48,6 +48,12 @@ bool generate_floor(int floor_num,
                    const char *items_file,
                    Room **outRooms, size_t *outCount);
 
+// Fonctions additionnelles pour jeu avec salles personnalisées
+void create_spawner_room_custom(Room *room, int id, int height, int width);
+void create_normal_room_custom(Room *room, int id, int height, int width);
+void create_item_room_custom(Room *room, int id, int height, int width, char item_code);
+void create_boss_room_custom(Room *room, int id, int height, int width);
+
 /// Free an array of Room structs returned by generate_floor().
 void free_rooms(Room *rooms, size_t count);
 

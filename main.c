@@ -489,12 +489,12 @@ int old_main(int argc, char const *argv[])
     return 0;
 }
 
-static void afficher_minimap(int layout[4][4], int current_room)
+static void afficher_minimap(int layout[6][5], int current_room)
 {
-    printf("\nMinicarte (grille 4x4) :\n\n");
-    for (int y = 0; y < 4; ++y) {
+    printf("\nMinicarte (grille 5x6) :\n\n");
+    for (int y = 0; y < 6; ++y) {
         printf("\n");
-        for (int x = 0; x < 4; ++x) {
+        for (int x = 0; x < 5; ++x) {
             if (layout[y][x] == -1) {
                 printf(" . ");
             } else if (layout[y][x] == current_room) {
@@ -514,16 +514,16 @@ int main(int argc, char const *argv[])
 
     int height = 0, width = 0;
     do {
-        printf("Entrez la hauteur des salles (9-20) : ");
+        printf("Entrez la hauteur impaire des salles (9-19) : ");
         if (scanf("%d", &height) != 1) { clear_stdin(); height = 0; continue; }
         clear_stdin();
-    } while (height < 9 || height > 20);
+    } while (height < 9 || height > 19 || (height % 2 == 0));
 
     do {
-        printf("Entrez la largeur des salles (9-20) : ");
+        printf("Entrez la largeur impaire des salles (9-19) : ");
         if (scanf("%d", &width) != 1) { clear_stdin(); width = 0; continue; }
         clear_stdin();
-    } while (width < 9 || width > 20);
+    } while (width < 9 || width > 19 || (width % 2 == 0));
 
     // Création des 14 salles en mémoire avec les dimensions partagées
     Room rooms[14];
@@ -535,27 +535,80 @@ int main(int argc, char const *argv[])
     create_boss_room_custom(&rooms[12], 12, height, width);
     create_item_room_custom(&rooms[13], 13, height, width, 'H');
 
-    // Positionnement aléatoire contigu sur grille 4x4
+    // Positionnement aléatoire contigu sur grille 5x6 avec spawn central
     typedef struct { int x, y; } Coord;
-    Coord pool[14] = {{0,0},{1,0},{2,0},{3,0},{0,1},{1,1},{2,1},{3,1},{0,2},{1,2},{2,2},{3,2},{0,3},{1,3}};
+    Coord pool[29];
+    int idx = 0;
+    for (int y = 0; y < 6; ++y) {
+        for (int x = 0; x < 5; ++x) {
+            if (x == 2 && y == 2) continue; // position centrale réservée au spawn
+            pool[idx++] = (Coord){x, y};
+        }
+    }
 
     srand((unsigned int)time(NULL));
-    for (int i = 13; i > 0; --i) {
+    for (int i = 28; i > 0; --i) {
         int j = rand() % (i + 1);
         Coord tmp = pool[i];
         pool[i] = pool[j];
         pool[j] = tmp;
     }
 
-    int layout[4][4];
-    for (int y = 0; y < 4; ++y)
-        for (int x = 0; x < 4; ++x)
+    int layout[6][5];
+    for (int y = 0; y < 6; ++y)
+        for (int x = 0; x < 5; ++x)
             layout[y][x] = -1;
 
     Coord room_position[14];
-    for (int i = 0; i < 14; ++i) {
-        room_position[i] = pool[i];
-        layout[pool[i].y][pool[i].x] = i;
+    // Spawn en position centrale fixe
+    room_position[0] = (Coord){2, 2};
+    layout[2][2] = 0;
+
+    bool used[6][5] = {0};
+    used[2][2] = true;
+
+    for (int i = 1; i < 14; ++i) {
+        // Construire la liste de candidats adjacents déjà connectés
+        Coord candidates[29];
+        int cand_count = 0;
+
+        for (int j = 0; j < 29; ++j) {
+            int px = pool[j].x;
+            int py = pool[j].y;
+            if (used[py][px]) continue;
+
+            bool has_neighbor = false;
+            if (py > 0 && used[py-1][px]) has_neighbor = true;
+            if (px < 4 && used[py][px+1]) has_neighbor = true;
+            if (py < 5 && used[py+1][px]) has_neighbor = true;
+            if (px > 0 && used[py][px-1]) has_neighbor = true;
+
+            if (has_neighbor) {
+                candidates[cand_count++] = pool[j];
+            }
+        }
+
+        Coord chosen;
+        if (cand_count > 0) {
+            chosen = candidates[rand() % cand_count];
+        } else {
+            // Aucun choix connecté, tomber en fallback sur une position libre
+            Coord freepos[29];
+            int free_count = 0;
+            for (int j = 0; j < 29; ++j) {
+                int px = pool[j].x;
+                int py = pool[j].y;
+                if (!used[py][px]) freepos[free_count++] = pool[j];
+            }
+            if (free_count > 0)
+                chosen = freepos[rand() % free_count];
+            else
+                chosen = (Coord){0,0};
+        }
+
+        room_position[i] = chosen;
+        layout[chosen.y][chosen.x] = i;
+        used[chosen.y][chosen.x] = true;
     }
 
     int adjacency[14][4]; // N E S W
@@ -563,8 +616,8 @@ int main(int argc, char const *argv[])
         int x = room_position[i].x;
         int y = room_position[i].y;
         adjacency[i][0] = (y > 0 && layout[y-1][x] != -1) ? layout[y-1][x] : -1;
-        adjacency[i][1] = (x < 3 && layout[y][x+1] != -1) ? layout[y][x+1] : -1;
-        adjacency[i][2] = (y < 3 && layout[y+1][x] != -1) ? layout[y+1][x] : -1;
+        adjacency[i][1] = (x < 4 && layout[y][x+1] != -1) ? layout[y][x+1] : -1;
+        adjacency[i][2] = (y < 5 && layout[y+1][x] != -1) ? layout[y+1][x] : -1;
         adjacency[i][3] = (x > 0 && layout[y][x-1] != -1) ? layout[y][x-1] : -1;
         configure_room_doors(&rooms[i],
                              adjacency[i][0] != -1,
@@ -588,11 +641,11 @@ int main(int argc, char const *argv[])
             for (int x = 0; x < width; ++x) {
                 printf("%c ", rooms[current_room].grid[y][x]);
             }
-            if (y == 0) printf("   4x4 Minicarte:");
-            if (y < 4) {
+            if (y == 0) printf("   5x6 Minicarte:");
+            if (y < 6) {
                 int yy = y;
                 printf("   ");
-                for (int xx = 0; xx < 4; ++xx) {
+                for (int xx = 0; xx < 5; ++xx) {
                     if (layout[yy][xx] == -1) printf(" . ");
                     else if (layout[yy][xx] == current_room) printf(" P ");
                     else printf(" * ");

@@ -103,10 +103,20 @@ void configure_room_doors(Room *room, bool north, bool east, bool south, bool we
     int midW = room->width / 2;
     int midH = room->height / 2;
 
-    if (north) room->grid[0][midW] = 'D'; else room->grid[0][midW] = 'W';
-    if (south) room->grid[room->height - 1][midW] = 'D'; else room->grid[room->height - 1][midW] = 'W';
-    if (west)  room->grid[midH][0] = 'D';         else room->grid[midH][0] = 'W';
-    if (east)  room->grid[midH][room->width - 1] = 'D'; else room->grid[midH][room->width - 1] = 'W';
+    // Asegurarse de no tener puertas sobrantes en el borde
+    for (int j = 0; j < room->width; ++j) {
+        room->grid[0][j] = 'W';
+        room->grid[room->height - 1][j] = 'W';
+    }
+    for (int i = 0; i < room->height; ++i) {
+        room->grid[i][0] = 'W';
+        room->grid[i][room->width - 1] = 'W';
+    }
+
+    if (north) room->grid[0][midW] = 'D';
+    if (south) room->grid[room->height - 1][midW] = 'D';
+    if (west)  room->grid[midH][0] = 'D';
+    if (east)  room->grid[midH][room->width - 1] = 'D';
 }
 
 void freeR(Room *R) {

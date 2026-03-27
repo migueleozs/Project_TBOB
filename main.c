@@ -674,20 +674,25 @@ int main(int argc, char const *argv[])
 
         if (cible == 'D') {
             int dir = -1;
-            if (ny == 0) dir = 0;
-            else if (nx == width - 1) dir = 1;
-            else if (ny == height - 1) dir = 2;
-            else if (nx == 0) dir = 3;
-            if (dir == -1) continue;
+            int midW = width / 2;
+            int midH = height / 2;
+
+            if (ny == 0 && nx == midW) dir = 0;
+            else if (nx == width - 1 && ny == midH) dir = 1;
+            else if (ny == height - 1 && nx == midW) dir = 2;
+            else if (nx == 0 && ny == midH) dir = 3;
+
+            if (dir == -1) continue; // puerta inválida, no navegar
+
             int next_room = adjacency[current_room][dir];
             if (next_room == -1) continue;
 
             rooms[current_room].grid[player_y][player_x] = 'D';
             current_room = next_room;
-            if (dir == 0) { player_y = height - 2; player_x = width/2; }
-            else if (dir == 1) { player_y = height/2; player_x = 1; }
-            else if (dir == 2) { player_y = 1; player_x = width/2; }
-            else if (dir == 3) { player_y = height/2; player_x = width-2; }
+            if (dir == 0) { player_y = height - 2; player_x = midW; }
+            else if (dir == 1) { player_y = midH;       player_x = 1; }
+            else if (dir == 2) { player_y = 1;          player_x = midW; }
+            else if (dir == 3) { player_y = midH;       player_x = width - 2; }
 
             rooms[current_room].grid[player_y][player_x] = 'P';
             continue;

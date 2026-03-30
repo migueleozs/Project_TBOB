@@ -5,6 +5,7 @@ hpMax=1.00
 ---
 name=Snack
 hpMax=1.00
+shield=20
 ---
 name=Launch
 hpMax=1.00

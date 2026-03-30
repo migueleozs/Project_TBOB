@@ -1,4 +1,4 @@
-{3}
+{4}
 ---
 name=Goblin
 hpMax=120.00
@@ -10,6 +10,12 @@ shoot=1
 ---
 name=ER
 hpMax=30.00
+shoot=1
+ss=1
+flight=1
+---
+name=Briatte
+hpMax=1.00
 shoot=1
 ss=1
 flight=1

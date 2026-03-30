@@ -251,7 +251,7 @@ static void run_monster_menu(void)
     }
 }
 
-int old_main(int argc, char const *argv[])
+int main(int argc, char const *argv[])
 {
     
     //Variables génériques
@@ -507,11 +507,11 @@ static void afficher_minimap(int layout[6][5], int current_room)
     }
 }
 
-int main(int argc, char const *argv[])
+int old_main(int argc, char const *argv[])
 {
     printf("=== TBOB Playable Prototype ===\n\n");
     printf("Contrôles : z/s/q/d ou w/s/a/d, x pour quitter.\n\n");
-
+/**/
     int height = 0, width = 0;
     do {
         printf("Entrez la hauteur impaire des salles (9-19) : ");
@@ -707,5 +707,7 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < 14; ++i) freeR(&rooms[i]);
 
     printf("Fin du jeu.\n");
+
+
     return 0;
 }
